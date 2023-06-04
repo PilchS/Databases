@@ -38,6 +38,8 @@ class App
         }
         App.commands = Arrays.copyOf(App.commands, App.commands.length + 1);
         App.commands[App.commands.length - 1] = "quit";
+        App.commands = Arrays.copyOf(App.commands, App.commands.length + 1);
+        App.commands[App.commands.length - 1] = "help";
         Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", App.postgrespass);
 		PreparedStatement stmt = conn.prepareStatement("insert into dbproject.relations (parent, child) values (?, ?)");
         BufferedReader br = new BufferedReader(new FileReader(new File("src/main/resources/app/databases/taxonomy_iw.csv")));
