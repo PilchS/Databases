@@ -30,7 +30,7 @@ class App
     private static void initialize(Date started) throws Exception
     {
         System.out.println("Initialization process started...");
-        // importing script.sql //
+        // importing script.sql to local postgres //
         for (int m = 1; m < 12; m++)
         {
             App.commands = Arrays.copyOf(App.commands, App.commands.length + 1);
@@ -41,15 +41,17 @@ class App
         App.commands = Arrays.copyOf(App.commands, App.commands.length + 1);
         App.commands[App.commands.length - 1] = "help";
         Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", App.postgrespass);
-		PreparedStatement stmt = conn.prepareStatement("insert into dbproject.relations (parent, child) values (?, ?)");
+		PreparedStatement stmt1 = conn.prepareStatement("insert into dbproject.relations (parent, child) values (?, ?)");
+        PreparedStatement stmt2 = conn.prepareStatement("insert into dbproject.nodes (node) values (?)");
         BufferedReader br = new BufferedReader(new FileReader(new File("src/main/resources/app/databases/taxonomy_iw.csv")));
         String line;
         while ((line = br.readLine()) != null)
         {
             String[] relation = line.split(",");
-            stmt.setString(1, relation[0]); stmt.setString(2, relation[1]);
-            stmt.executeUpdate();
+            stmt1.setString(1, relation[0]); stmt1.setString(2, relation[1]); stmt1.executeUpdate();
+            for (int m = 0; m < 2; m++) {stmt2.setString(1, relation[m]); stmt2.executeUpdate();}
         }
+        br.close();
         Date finished = new Date();
         System.out.println("Application successfully initialized after: " + (finished.getTime() - started.getTime()) + "ms");
     }
@@ -128,6 +130,55 @@ class App
         }
         return grandparents;
     }
+    private static int task7() throws Exception
+    {
+        int counter = 0; System.out.println("Finding all uniquely named nodes...\n");
+        Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", App.postgrespass);
+        PreparedStatement stmt = conn.prepareStatement("select node from dbproject.nodes group by node");
+        ResultSet rs = stmt.executeQuery();
+        while (rs.next()) {counter++;}
+        return counter;
+    }
+    private static String[] task9() throws Exception
+    {
+        System.out.println("Finding node/nodes with the most children...\n");
+        Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", App.postgrespass);
+        PreparedStatement stmt = conn.prepareStatement("select parent, count(child) as number from dbproject.relations group by parent order by number desc");
+        ResultSet rs = stmt.executeQuery(); String[] nodes = new String[1]; boolean flag = true; int number = 0;
+        while (rs.next())
+        {
+            if (flag) {nodes[0] = rs.getString("parent"); number = rs.getInt("number"); flag = false;}
+            else 
+            {
+                if (number == rs.getInt("number"))
+                {
+                    nodes = Arrays.copyOf(nodes, nodes.length + 1);
+                    nodes[nodes.length - 1] = rs.getString("parent");
+                }
+            }
+        }
+        return nodes;
+    }
+    private static String[] task10() throws Exception
+    {
+        System.out.println("Finding node/nodes with the most children...\n");
+        Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", App.postgrespass);
+        PreparedStatement stmt = conn.prepareStatement("select parent, count(child) as number from dbproject.relations group by parent order by number asc");
+        ResultSet rs = stmt.executeQuery(); String[] nodes = new String[1]; boolean flag = true; int number = 0;
+        while (rs.next())
+        {
+            if (flag) {nodes[0] = rs.getString("parent"); number = rs.getInt("number"); flag = false;}
+            else 
+            {
+                if (number == rs.getInt("number"))
+                {
+                    nodes = Arrays.copyOf(nodes, nodes.length + 1);
+                    nodes[nodes.length - 1] = rs.getString("parent");
+                }
+            }
+        }
+        return nodes;
+    }
     public static void main(String[] args) throws Exception
     {
         initialize(new Date()); String line;
@@ -141,10 +192,10 @@ class App
             else if (line.contains("task4")) {System.out.println(Arrays.toString(App.task4()));}
             else if (line.contains("task5")) {System.out.println(App.task5());}
             else if (line.contains("task6")) {System.out.println(Arrays.toString(App.task6()));}
-            else if (line.contains("task7")) {}
+            else if (line.contains("task7")) {System.out.println(App.task7());}
             else if (line.contains("task8")) {}
-            else if (line.contains("task9")) {}
-            else if (line.contains("task10")) {}
+            else if (line.contains("task9")) {System.out.println(Arrays.toString(App.task9()));}
+            else if (line.contains("task10")) {System.out.println(Arrays.toString(App.task10()));}
             else if (line.contains("task11")) {}
             else if (line.contains("quit")) {break;}
             else if (line.contains("help")) {System.out.println("Available commends: "); showCommands();}
