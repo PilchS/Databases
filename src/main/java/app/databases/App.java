@@ -158,7 +158,7 @@ class App
     }
     private static String[] task10() throws Exception
     {
-        System.out.println("Finding node/nodes with the most children...\n");
+        System.out.println("Finding node/nodes with the least children...\n");
         Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", App.postgrespass);
         PreparedStatement stmt = conn.prepareStatement("select parent, count(child) as number from dbproject.relations group by parent order by number asc");
         ResultSet rs = stmt.executeQuery(); String[] nodes = new String[1]; boolean flag = true; int number = 0;
@@ -190,7 +190,7 @@ class App
     }
     public static void main(String[] args) throws Exception
     {
-        /*initialize(new Date());*/ String line;
+        initialize(new Date()); String line;
         System.out.println("Type in command you use wish to use. (check 'help' for all available commands)");
         while (true)
         {
