@@ -178,20 +178,19 @@ class App
     }
     private static void task11() throws Exception
     {
-        System.out.print("Select a node: "); String node = App.sc.nextLine(); int counter = 0;
+        System.out.print("Select a node: "); String old_name = App.sc.nextLine(); int counter = 0;
+        System.out.print("Select a new name for this node: "); String new_name = App.sc.nextLine();
         System.out.println("Renaming given node...\n");
         Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", App.postgrespass);
-		PreparedStatement stmt = conn.prepareStatement("select * from dbproject.relations where parent = '" + node + "' or child = '" + node + "'");
-        ResultSet rs = stmt.executeQuery();
-        while (rs.next())
-        {
-            counter++;
-        }
-        System.out.println("Number of rows changed: " + counter);
+		PreparedStatement stmt = conn.prepareStatement("update dbproject.relations set parent = '" + new_name + "' where parent = '" + old_name + "'");
+        counter += stmt.executeUpdate();
+        stmt = conn.prepareStatement("update dbproject.relations set child = '" + new_name + "' where child = '" + old_name + "'");
+        counter += stmt.executeUpdate();
+        System.out.println("Number of updated rows: " + counter);
     }
     public static void main(String[] args) throws Exception
     {
-        initialize(new Date()); String line;
+        /*initialize(new Date());*/ String line;
         System.out.println("Type in command you use wish to use. (check 'help' for all available commands)");
         while (true)
         {
