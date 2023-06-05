@@ -42,14 +42,12 @@ class App
         App.commands[App.commands.length - 1] = "help";
         Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", App.postgrespass);
 		PreparedStatement stmt1 = conn.prepareStatement("insert into dbproject.relations (parent, child) values (?, ?)");
-        PreparedStatement stmt2 = conn.prepareStatement("insert into dbproject.nodes (node) values (?)");
         BufferedReader br = new BufferedReader(new FileReader(new File("src/main/resources/app/databases/taxonomy_iw.csv")));
         String line;
         while ((line = br.readLine()) != null)
         {
             String[] relation = line.split(",");
             stmt1.setString(1, relation[0]); stmt1.setString(2, relation[1]); stmt1.executeUpdate();
-            for (int m = 0; m < 2; m++) {stmt2.setString(1, relation[m]); stmt2.executeUpdate();}
         }
         br.close();
         Date finished = new Date();
@@ -132,12 +130,11 @@ class App
     }
     private static int task7() throws Exception
     {
-        int counter = 0; System.out.println("Finding all uniquely named nodes...\n");
+        System.out.println("Finding all uniquely named nodes...\n");
         Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", App.postgrespass);
-        PreparedStatement stmt = conn.prepareStatement("select node from dbproject.nodes group by node");
-        ResultSet rs = stmt.executeQuery();
-        while (rs.next()) {counter++;}
-        return counter;
+        PreparedStatement stmt = conn.prepareStatement("select count(rows) from (select child from dbproject.relations group by child union select parent from dbproject.relations group by parent) as rows");
+        ResultSet rs = stmt.executeQuery(); rs.next();
+        return rs.getInt("count");
     }
     private static String[] task9() throws Exception
     {
@@ -179,6 +176,19 @@ class App
         }
         return nodes;
     }
+    private static void task11() throws Exception
+    {
+        System.out.print("Select a node: "); String node = App.sc.nextLine(); int counter = 0;
+        System.out.println("Renaming given node...\n");
+        Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", App.postgrespass);
+		PreparedStatement stmt = conn.prepareStatement("select * from dbproject.relations where parent = '" + node + "' or child = '" + node + "'");
+        ResultSet rs = stmt.executeQuery();
+        while (rs.next())
+        {
+            counter++;
+        }
+        System.out.println("Number of rows changed: " + counter);
+    }
     public static void main(String[] args) throws Exception
     {
         initialize(new Date()); String line;
@@ -186,22 +196,21 @@ class App
         while (true)
         {
             System.out.print("Your command: "); line = App.sc.nextLine();
-            if (line.contains("task1")) {System.out.println(Arrays.toString(App.task1()));}
-            else if (line.contains("task2")) {System.out.println(App.task2());}
-            else if (line.contains("task3")) {System.out.println(Arrays.toString(App.task3()));}
-            else if (line.contains("task4")) {System.out.println(Arrays.toString(App.task4()));}
-            else if (line.contains("task5")) {System.out.println(App.task5());}
-            else if (line.contains("task6")) {System.out.println(Arrays.toString(App.task6()));}
-            else if (line.contains("task7")) {System.out.println(App.task7());}
-            else if (line.contains("task8")) {}
-            else if (line.contains("task9")) {System.out.println(Arrays.toString(App.task9()));}
-            else if (line.contains("task10")) {System.out.println(Arrays.toString(App.task10()));}
-            else if (line.contains("task11")) {}
-            else if (line.contains("quit")) {break;}
-            else if (line.contains("help")) {System.out.println("Available commends: "); showCommands();}
+            if (line.equalsIgnoreCase("task1")) {System.out.println(Arrays.toString(App.task1()));}
+            else if (line.equalsIgnoreCase("task2")) {System.out.println(App.task2());}
+            else if (line.equalsIgnoreCase("task3")) {System.out.println(Arrays.toString(App.task3()));}
+            else if (line.equalsIgnoreCase("task4")) {System.out.println(Arrays.toString(App.task4()));}
+            else if (line.equalsIgnoreCase("task5")) {System.out.println(App.task5());}
+            else if (line.equalsIgnoreCase("task6")) {System.out.println(Arrays.toString(App.task6()));}
+            else if (line.equalsIgnoreCase("task7")) {System.out.println(App.task7());}
+            else if (line.equalsIgnoreCase("task8")) {}
+            else if (line.equalsIgnoreCase("task9")) {System.out.println(Arrays.toString(App.task9()));}
+            else if (line.equalsIgnoreCase("task10")) {System.out.println(Arrays.toString(App.task10()));}
+            else if (line.equalsIgnoreCase("task11")) {App.task11();}
+            else if (line.equalsIgnoreCase("quit")) {break;}
+            else if (line.equalsIgnoreCase("help")) {System.out.println("Available commends: "); showCommands();}
             else {System.out.println("Unrecognized command. Check 'help' for all available commands.");}
             System.out.println("\n");
-            // Date started = new Date(); Date finished = new Date(); System.out.println("Query completed in: " + (finished.getTime() - started.getTime()) + "ms.");
         }
     }
 }
