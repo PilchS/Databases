@@ -42,10 +42,12 @@ class App
         Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", App.postgrespass);
 		PreparedStatement stmt1 = conn.prepareStatement("insert into dbproject.relations (parent, child) values (?, ?)");
         BufferedReader br = new BufferedReader(new FileReader(new File("src/main/resources/app/databases/taxonomy_iw.csv")));
-        String line;
+        String line; String temp1; String temp2; String[] temp_array; String[] relation = new String[2];
         while ((line = br.readLine()) != null)
         {
-            String[] relation = line.split(",");
+            temp_array = line.split("\"*\",\"*\""); temp1 = temp_array[0]; temp2 = temp_array[1];
+            System.out.println(temp_array.length);
+            temp_array = temp1.split("\""); relation[0] = temp_array[1]; temp_array = temp2.split("\""); relation[1] = temp_array[0];
             stmt1.setString(1, relation[0]); stmt1.setString(2, relation[1]); stmt1.executeUpdate();
         }
         br.close();
@@ -127,23 +129,39 @@ class App
         }
         return grandparents;
     }
+    // fix
     private static int task7() throws Exception
     {
-        System.out.println("Finding all uniquely named nodes...\n");
+        System.out.println("Finding the number of all uniquely named nodes...\n");
         Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", App.postgrespass);
         PreparedStatement stmt = conn.prepareStatement("select count(rows) from (select child from dbproject.relations group by child union select parent from dbproject.relations group by parent) as rows");
         ResultSet rs = stmt.executeQuery(); rs.next();
         return rs.getInt("count");
+    }
+    // fix
+    private static String[] task8() throws Exception
+    {
+        System.out.println("Finding the root nodes...\n"); String[] nodes = new String[0];
+        Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", App.postgrespass);
+        PreparedStatement stmt = conn.prepareStatement("select rows from (select parent from dbproject.relations group by parent except select child from dbproject.relations group by child) as rows;");
+        ResultSet rs = stmt.executeQuery(); String temp;
+        while (rs.next())
+        {
+            temp = rs.getString("rows");
+            nodes = Arrays.copyOf(nodes, nodes.length + 1);
+            nodes[nodes.length - 1] = temp.substring(1, temp.length() - 1);
+        }
+        return nodes;
     }
     private static String[] task9() throws Exception
     {
         System.out.println("Finding node/nodes with the most children...\n");
         Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", App.postgrespass);
         PreparedStatement stmt = conn.prepareStatement("select parent, count(child) as number from dbproject.relations group by parent order by number desc");
-        ResultSet rs = stmt.executeQuery(); String[] nodes = new String[1]; boolean flag = true; int number = 0;
+        ResultSet rs = stmt.executeQuery(); String[] nodes = new String[1]; boolean flag = false; int number = 0;
         while (rs.next())
         {
-            if (flag) {nodes[0] = rs.getString("parent"); number = rs.getInt("number"); flag = false;}
+            if (flag == false) {nodes[0] = rs.getString("parent"); number = rs.getInt("number"); flag = true;}
             else 
             {
                 if (number == rs.getInt("number"))
@@ -159,17 +177,28 @@ class App
     {
         System.out.println("Finding node/nodes with the least children...\n");
         Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", App.postgrespass);
-        PreparedStatement stmt = conn.prepareStatement("select parent, count(child) as number from dbproject.relations group by parent order by number asc");
-        ResultSet rs = stmt.executeQuery(); String[] nodes = new String[1]; boolean flag = true; int number = 0;
+        PreparedStatement stmt = conn.prepareStatement("select child from dbproject.relations group by child except select parent from dbproject.relations group by parent");
+        ResultSet rs = stmt.executeQuery(); String[] nodes = new String[0]; boolean flag = false; int number = 0;
         while (rs.next())
         {
-            if (flag) {nodes[0] = rs.getString("parent"); number = rs.getInt("number"); flag = false;}
-            else 
+            if (flag == false) {flag = true;}
+            nodes = Arrays.copyOf(nodes, nodes.length + 1);
+            nodes[nodes.length - 1] = rs.getString("child");
+        }
+        if (flag == false)
+        {
+            stmt = conn.prepareStatement("select parent, count(child) as number from dbproject.relations group by parent order by number asc");
+            nodes = Arrays.copyOf(nodes, nodes.length + 1); rs = stmt.executeQuery();
+            while (rs.next())
             {
-                if (number == rs.getInt("number"))
+                if (flag == false) {nodes[0] = rs.getString("parent"); number = rs.getInt("number"); flag = true;}
+                else 
                 {
-                    nodes = Arrays.copyOf(nodes, nodes.length + 1);
-                    nodes[nodes.length - 1] = rs.getString("parent");
+                    if (number == rs.getInt("number"))
+                    {
+                        nodes = Arrays.copyOf(nodes, nodes.length + 1);
+                        nodes[nodes.length - 1] = rs.getString("parent");
+                    }
                 }
             }
         }
@@ -201,7 +230,7 @@ class App
             else if (line.equalsIgnoreCase("task5")) {System.out.println(App.task5());}
             else if (line.equalsIgnoreCase("task6")) {System.out.println(Arrays.toString(App.task6()));}
             else if (line.equalsIgnoreCase("task7")) {System.out.println(App.task7());}
-            else if (line.equalsIgnoreCase("task8")) {}
+            else if (line.equalsIgnoreCase("task8")) {System.out.println(Arrays.toString(App.task8()));}
             else if (line.equalsIgnoreCase("task9")) {System.out.println(Arrays.toString(App.task9()));}
             else if (line.equalsIgnoreCase("task10")) {System.out.println(Arrays.toString(App.task10()));}
             else if (line.equalsIgnoreCase("task11")) {App.task11();}
