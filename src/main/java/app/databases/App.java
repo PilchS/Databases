@@ -46,7 +46,6 @@ class App
         while ((line = br.readLine()) != null)
         {
             temp_array = line.split("\"*\",\"*\""); temp1 = temp_array[0]; temp2 = temp_array[1];
-            System.out.println(temp_array.length);
             temp_array = temp1.split("\""); relation[0] = temp_array[1]; temp_array = temp2.split("\""); relation[1] = temp_array[0];
             stmt1.setString(1, relation[0]); stmt1.setString(2, relation[1]); stmt1.executeUpdate();
         }
