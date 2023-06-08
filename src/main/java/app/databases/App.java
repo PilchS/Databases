@@ -42,11 +42,11 @@ class App
         Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", App.postgrespass);
 		PreparedStatement stmt1 = conn.prepareStatement("insert into dbproject.relations (parent, child) values (?, ?)");
         BufferedReader br = new BufferedReader(new FileReader(new File("src/main/resources/app/databases/taxonomy_iw.csv")));
-        String line; String temp1; String temp2; String[] temp_array; String[] relation = new String[2];
+        String line; String[] temp; String[] relation = new String[2];
         while ((line = br.readLine()) != null)
         {
-            temp_array = line.split("\"*\",\"*\""); temp1 = temp_array[0]; temp2 = temp_array[1];
-            temp_array = temp1.split("\""); relation[0] = temp_array[1]; temp_array = temp2.split("\""); relation[1] = temp_array[0];
+            temp = line.split("\"*\",\"*\"");
+            relation[0] = temp[0].substring(1, temp[0].length()); relation[1] = temp[1].substring(0, temp[1].length() - 1);
             stmt1.setString(1, relation[0]); stmt1.setString(2, relation[1]); stmt1.executeUpdate();
         }
         br.close();
@@ -128,7 +128,6 @@ class App
         }
         return grandparents;
     }
-    // fix
     private static int task7() throws Exception
     {
         System.out.println("Finding the number of all uniquely named nodes...\n");
@@ -137,7 +136,6 @@ class App
         ResultSet rs = stmt.executeQuery(); rs.next();
         return rs.getInt("count");
     }
-    // fix
     private static String[] task8() throws Exception
     {
         System.out.println("Finding the root nodes...\n"); String[] nodes = new String[0];
@@ -152,56 +150,48 @@ class App
         }
         return nodes;
     }
-    private static String[] task9() throws Exception
+    private static void task9() throws Exception
     {
         System.out.println("Finding node/nodes with the most children...\n");
         Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", App.postgrespass);
         PreparedStatement stmt = conn.prepareStatement("select parent, count(child) as number from dbproject.relations group by parent order by number desc");
-        ResultSet rs = stmt.executeQuery(); String[] nodes = new String[1]; boolean flag = false; int number = 0;
+        ResultSet rs = stmt.executeQuery(); boolean flag = false; int number = 0;
         while (rs.next())
         {
-            if (flag == false) {nodes[0] = rs.getString("parent"); number = rs.getInt("number"); flag = true;}
+            if (flag == false) {System.out.print(rs.getString("parent") + "\t"); number = rs.getInt("number"); flag = true;}
             else 
             {
                 if (number == rs.getInt("number"))
                 {
-                    nodes = Arrays.copyOf(nodes, nodes.length + 1);
-                    nodes[nodes.length - 1] = rs.getString("parent");
+                    System.out.print(rs.getString("parent") + "\t");
+
                 }
             }
         }
-        return nodes;
     }
-    private static String[] task10() throws Exception
+    private static void task10() throws Exception
     {
         System.out.println("Finding node/nodes with the least children...\n");
         Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", App.postgrespass);
         PreparedStatement stmt = conn.prepareStatement("select child from dbproject.relations group by child except select parent from dbproject.relations group by parent");
-        ResultSet rs = stmt.executeQuery(); String[] nodes = new String[0]; boolean flag = false; int number = 0;
+        ResultSet rs = stmt.executeQuery(); boolean flag = false; int number = 0;
         while (rs.next())
         {
-            if (flag == false) {flag = true;}
-            nodes = Arrays.copyOf(nodes, nodes.length + 1);
-            nodes[nodes.length - 1] = rs.getString("child");
+            if (flag == false) {flag = true;} System.out.print(rs.getString("child") + "\t");
         }
         if (flag == false)
         {
             stmt = conn.prepareStatement("select parent, count(child) as number from dbproject.relations group by parent order by number asc");
-            nodes = Arrays.copyOf(nodes, nodes.length + 1); rs = stmt.executeQuery();
+            rs = stmt.executeQuery();
             while (rs.next())
             {
-                if (flag == false) {nodes[0] = rs.getString("parent"); number = rs.getInt("number"); flag = true;}
+                if (flag == false) {System.out.print(rs.getString("child") + "\t"); number = rs.getInt("number"); flag = true;}
                 else 
                 {
-                    if (number == rs.getInt("number"))
-                    {
-                        nodes = Arrays.copyOf(nodes, nodes.length + 1);
-                        nodes[nodes.length - 1] = rs.getString("parent");
-                    }
+                    if (number == rs.getInt("number")) {System.out.println(rs.getString("child") + "\t");}
                 }
             }
         }
-        return nodes;
     }
     private static void task11() throws Exception
     {
@@ -217,7 +207,7 @@ class App
     }
     public static void main(String[] args) throws Exception
     {
-        initialize(new Date()); String line;
+        /*initialize(new Date());*/ String line;
         System.out.println("Type in command you use wish to use. (check 'help' for all available commands)");
         while (true)
         {
@@ -230,8 +220,8 @@ class App
             else if (line.equalsIgnoreCase("task6")) {System.out.println(Arrays.toString(App.task6()));}
             else if (line.equalsIgnoreCase("task7")) {System.out.println(App.task7());}
             else if (line.equalsIgnoreCase("task8")) {System.out.println(Arrays.toString(App.task8()));}
-            else if (line.equalsIgnoreCase("task9")) {System.out.println(Arrays.toString(App.task9()));}
-            else if (line.equalsIgnoreCase("task10")) {System.out.println(Arrays.toString(App.task10()));}
+            else if (line.equalsIgnoreCase("task9")) {App.task9();}
+            else if (line.equalsIgnoreCase("task10")) {App.task10();}
             else if (line.equalsIgnoreCase("task11")) {App.task11();}
             else if (line.equalsIgnoreCase("quit")) {break;}
             else if (line.equalsIgnoreCase("help")) {System.out.println("Available commends: "); showCommands();}
