@@ -1,9 +1,8 @@
 package app.databases;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
+import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -28,11 +27,12 @@ class App
     }
     private static void initialize() throws Exception
     {
-        System.out.println("Initialization process started...");
+        System.out.print("Initialization process started...");
         for (int m = 1; m < 12; m++) {App.commands = Arrays.copyOf(App.commands, App.commands.length + 1); App.commands[App.commands.length - 1] = "task" + m;}
-        App.commands = Arrays.copyOf(App.commands, App.commands.length + 1); App.commands[App.commands.length - 1] = "quit";
+        App.commands = Arrays.copyOf(App.commands, App.commands.length + 1); App.commands[App.commands.length - 1] = "exit";
         App.commands = Arrays.copyOf(App.commands, App.commands.length + 1); App.commands[App.commands.length - 1] = "help";
         App.commands = Arrays.copyOf(App.commands, App.commands.length + 1); App.commands[App.commands.length - 1] = "import";
+        System.out.print("\tDONE\n");
     }
     private static void showCommands()
     {
@@ -42,15 +42,30 @@ class App
     }
     private static void data_import() throws Exception
     {
-        System.out.print("Preparing the database...\n\n");
+        System.out.print("Preparing the database...\n\n"); PreparedStatement stmt = null;
         Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", App.postgrespass);
-        PreparedStatement stmt = conn.prepareStatement("drop table dbproject.relations"); stmt.execute();
-        stmt = conn.prepareStatement("drop schema dbproject"); stmt.execute();
-        stmt = conn.prepareStatement("create schema dbproject"); stmt.execute();
-        stmt = conn.prepareStatement("create table dbproject.relations (parent character varying(255), child character varying(255))"); stmt.execute();
+        try
+        {
+            stmt = conn.prepareStatement("drop database dbproject"); stmt.execute();
+            stmt = conn.prepareStatement("create database dbproject with encoding utf8"); stmt.execute();
+        }
+        catch (Exception e)
+        {
+            stmt = conn.prepareStatement("create database dbproject with encoding utf8"); stmt.execute();
+        }
+        conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/dbproject", "postgres", App.postgrespass);
+        try
+        {
+            stmt = conn.prepareStatement("drop table relations"); stmt.execute();
+            stmt = conn.prepareStatement("create table relations (parent character varying(255), child character varying(255))"); stmt.execute();
+        }
+        catch (Exception e)
+        {
+            stmt = conn.prepareStatement("create table relations (parent character varying(255), child character varying(255))"); stmt.execute();
+        }
         System.out.print("Importing the data...\n\n");
-        stmt = conn.prepareStatement("insert into dbproject.relations (parent, child) values (?, ?)");
-        BufferedReader br = new BufferedReader(new FileReader(new File("src/main/resources/app/databases/taxonomy_iw.csv")));
+        stmt = conn.prepareStatement("insert into relations (parent, child) values (?, ?)");
+        BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("src/main/resources/app/databases/taxonomy_iw.csv"), "UTF-8"));
         String line; String[] temp; String[] relation = new String[2]; int counter = 0;
         while ((line = br.readLine()) != null)
         {
@@ -61,8 +76,8 @@ class App
         }
         stmt.executeBatch(); br.close();
         System.out.print("Creating indexes...\n\n");
-        stmt = conn.prepareStatement("create index parent_idx on dbproject.relations (parent)"); stmt.execute();
-        stmt = conn.prepareStatement("create index child_idx on dbproject.relations (child)"); stmt.execute();
+        stmt = conn.prepareStatement("create index parent_idx on relations (parent)"); stmt.execute();
+        stmt = conn.prepareStatement("create index child_idx on relations (child)"); stmt.execute();
     }
     private static void task1(String node) throws Exception
     {
@@ -77,8 +92,8 @@ class App
             node = temp;
         }
         System.out.print("Finding all children of a given node...\n\n");
-        Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", App.postgrespass);
-		PreparedStatement stmt = conn.prepareStatement("select child from dbproject.relations where parent = '" + node + "'");
+        Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/dbproject", "postgres", App.postgrespass);
+		PreparedStatement stmt = conn.prepareStatement("select child from relations where parent = '" + node + "'");
         ResultSet rs = stmt.executeQuery(); System.out.print("All children of a given node: \n\n");
         while (rs.next()) {System.out.print(rs.getString("child") + "  ");} System.out.print("\n");
     }
@@ -95,15 +110,15 @@ class App
             node = temp;
         }
         System.out.print("Finding the number of children of a given node...\n\n");
-        Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", App.postgrespass);
-		PreparedStatement stmt = conn.prepareStatement("select count(child) from dbproject.relations where parent = '" + node + "'");
+        Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/dbproject", "postgres", App.postgrespass);
+		PreparedStatement stmt = conn.prepareStatement("select count(child) from relations where parent = '" + node + "'");
         ResultSet rs = stmt.executeQuery(); rs.next(); System.out.print("Number of the children found: " + rs.getInt("count") + "\n");
     }
     private static void task3(String node) throws Exception
     {
         System.out.print("Finding all grandchildren of a given node...\n\n");
-        Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", App.postgrespass);
-		PreparedStatement stmt = conn.prepareStatement("select child from dbproject.relations where parent = '" + node + "'");
+        Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/dbproject", "postgres", App.postgrespass);
+		PreparedStatement stmt = conn.prepareStatement("select child from relations where parent = '" + node + "'");
         ResultSet rs = stmt.executeQuery(); System.out.print("All grandchildren of a given node: \n\n"); ResultSet rs2;
         while (rs.next())
         {
@@ -118,7 +133,7 @@ class App
                 }
                 node = temp;
             }
-            stmt = conn.prepareStatement("select child from dbproject.relations where parent = '" + node + "'");
+            stmt = conn.prepareStatement("select child from relations where parent = '" + node + "'");
             rs2 = stmt.executeQuery(); while (rs2.next()) {System.out.print(rs2.getString("child") + "  ");}
         }
         System.out.print("\n");
@@ -136,8 +151,8 @@ class App
             node = temp;
         }
         System.out.print("Finding all parents of a given node...\n\n");
-        Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", App.postgrespass);
-		PreparedStatement stmt = conn.prepareStatement("select parent from dbproject.relations where child = '" + node + "'");
+        Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/dbproject", "postgres", App.postgrespass);
+		PreparedStatement stmt = conn.prepareStatement("select parent from relations where child = '" + node + "'");
         ResultSet rs = stmt.executeQuery(); System.out.print("All parents of a given node: \n\n");
         while (rs.next()) {System.out.print(rs.getString("parent") + "  ");} System.out.print("\n");
     }
@@ -154,15 +169,15 @@ class App
             node = temp;
         }
         System.out.print("Finding the number of parents of a given node...\n\n");
-        Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", App.postgrespass);
-		PreparedStatement stmt = conn.prepareStatement("select count(parent) from dbproject.relations where child = '" + node + "'");
+        Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/dbproject", "postgres", App.postgrespass);
+		PreparedStatement stmt = conn.prepareStatement("select count(parent) from relations where child = '" + node + "'");
         ResultSet rs = stmt.executeQuery();  rs.next(); System.out.print("Number of the parents found: " + rs.getInt("count") + "\n");
     }
     private static void task6(String node) throws Exception
     {
         System.out.print("Finding all grandparents of a given node...\n\n");
-        Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", App.postgrespass);
-		PreparedStatement stmt = conn.prepareStatement("select parent from dbproject.relations where child = '" + node + "'");
+        Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/dbproject", "postgres", App.postgrespass);
+		PreparedStatement stmt = conn.prepareStatement("select parent from relations where child = '" + node + "'");
         ResultSet rs = stmt.executeQuery(); System.out.print("All grandparents of a given node: \n\n"); ResultSet rs2;
         while (rs.next())
         {
@@ -177,7 +192,7 @@ class App
                 }
                 node = temp;
             }
-            stmt = conn.prepareStatement("select parent from dbproject.relations where child = '" + node + "'");
+            stmt = conn.prepareStatement("select parent from relations where child = '" + node + "'");
             rs2 = stmt.executeQuery(); while (rs2.next()) {System.out.print(rs2.getString("parent") + "  ");}
         }
         System.out.print("\n");
@@ -185,24 +200,24 @@ class App
     private static void task7() throws Exception
     {
         System.out.print("Finding the number of all uniquely named nodes...\n\n");
-        Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", App.postgrespass);
-        PreparedStatement stmt = conn.prepareStatement("select count(rows) from (select child from dbproject.relations group by child union select parent from dbproject.relations group by parent) as rows");
+        Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/dbproject", "postgres", App.postgrespass);
+        PreparedStatement stmt = conn.prepareStatement("select count(rows) from (select child from relations group by child union select parent from relations group by parent) as rows");
         ResultSet rs = stmt.executeQuery(); rs.next(); System.out.print("Number of the nodes found: " + rs.getInt("count") + "\n");
     }
     // fix
     private static void task8() throws Exception
     {
         System.out.print("Finding the root nodes...\n\n");
-        Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", App.postgrespass);
-        PreparedStatement stmt = conn.prepareStatement("select result from (select parent from dbproject.relations group by parent except select child from dbproject.relations group by child) as result;");
+        Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/dbproject", "postgres", App.postgrespass);
+        PreparedStatement stmt = conn.prepareStatement("select parent from relations group by parent except select child from relations group by child");
         ResultSet rs = stmt.executeQuery(); System.out.print("All root nodes found: \n\n");
-        while (rs.next()) {System.out.print(rs.getString("result") + "  ");} System.out.print("\n");
+        while (rs.next()) {System.out.print(rs.getString("parent") + "  ");} System.out.print("\n");
     }
     private static void task9() throws Exception
     {
         System.out.print("Finding nodes with the most children...\n\n");
-        Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", App.postgrespass);
-        PreparedStatement stmt = conn.prepareStatement("select parent, count(child) from dbproject.relations group by parent order by count desc");
+        Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/dbproject", "postgres", App.postgrespass);
+        PreparedStatement stmt = conn.prepareStatement("select parent, count(child) from relations group by parent order by count desc");
         ResultSet rs = stmt.executeQuery(); boolean flag = false; int number = 0; System.out.print("Nodes with the most children: \n\n");
         while (rs.next())
         {
@@ -214,13 +229,13 @@ class App
     private static void task10() throws Exception
     {
         System.out.println("Finding nodes with the least children...\n");
-        Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", App.postgrespass);
-        PreparedStatement stmt = conn.prepareStatement("select child from dbproject.relations group by child except select parent from dbproject.relations group by parent");
+        Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/dbproject", "postgres", App.postgrespass);
+        PreparedStatement stmt = conn.prepareStatement("select child from relations group by child except select parent from relations group by parent");
         ResultSet rs = stmt.executeQuery(); boolean flag = false; int number = 0; System.out.print("Nodes with the least children: \n\n");
         while (rs.next()) {if (flag == false) {flag = true;} System.out.print(rs.getString("child") + "  ");}
         if (flag == false)
         {
-            stmt = conn.prepareStatement("select parent, count(child) from dbproject.relations group by parent order by count asc"); rs = stmt.executeQuery();
+            stmt = conn.prepareStatement("select parent, count(child) from relations group by parent order by count asc"); rs = stmt.executeQuery();
             while (rs.next())
             {
                 if (flag == false) {System.out.print(rs.getString("child") + "  "); number = rs.getInt("count"); flag = true;}
@@ -252,10 +267,10 @@ class App
             new_node = temp;
         }
         int counter = 0; System.out.println("Renaming given node...\n");
-        Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", App.postgrespass);
-		PreparedStatement stmt = conn.prepareStatement("update dbproject.relations set parent = '" + new_node + "' where parent = '" + old_node + "'");
+        Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/dbproject", "postgres", App.postgrespass);
+		PreparedStatement stmt = conn.prepareStatement("update relations set parent = '" + new_node + "' where parent = '" + old_node + "'");
         counter += stmt.executeUpdate();
-        stmt = conn.prepareStatement("update dbproject.relations set child = '" + new_node + "' where child = '" + old_node + "'");
+        stmt = conn.prepareStatement("update relations set child = '" + new_node + "' where child = '" + old_node + "'");
         counter += stmt.executeUpdate();
         System.out.println("Number of updated rows: " + counter);
     }
@@ -330,11 +345,10 @@ class App
             }
             else if (line.equalsIgnoreCase("import"))
             {
-                System.out.print("Starting import...\n\n");
                 Date started = new Date(); App.data_import(); Date finished = new Date();
                 System.out.print("Import finished after: " + (finished.getTime() - started.getTime()) + "ms\n\n");
             }
-            else if (line.equalsIgnoreCase("quit")) {break;}
+            else if (line.equalsIgnoreCase("exit")) {break;}
             else if (line.equalsIgnoreCase("help")) {App.showCommands();}
             else {System.out.print("Unrecognized command (check 'help' for all available commands).\n\n");}
         }
