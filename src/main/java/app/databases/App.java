@@ -81,8 +81,9 @@ class App
             }
             node = temp;
         }
-        System.out.print("Finding all children of a given node...\n\n");
-        Connection conn = DriverManager.getConnection("jdbc:postgresql://database:5432/dbproject", "postgres", "password");
+        System.out.print("Finding all children of a given node...\n\n"); Connection conn = null;
+        try {conn = DriverManager.getConnection("jdbc:postgresql://database:5432/dbproject", "postgres", "password");}
+        catch (Exception e) {System.out.print("No data imported yet\n\n"); return;}
 		PreparedStatement stmt = conn.prepareStatement("select child from relations where parent = '" + node + "'");
         ResultSet rs = stmt.executeQuery(); System.out.print("All children of a given node: \n\n");
         while (rs.next()) {System.out.print(rs.getString("child") + "  ");} System.out.print("\n");
@@ -99,15 +100,17 @@ class App
             }
             node = temp;
         }
-        System.out.print("Finding the number of children of a given node...\n\n");
-        Connection conn = DriverManager.getConnection("jdbc:postgresql://database:5432/dbproject", "postgres", "password");
+        System.out.print("Finding the number of children of a given node...\n\n"); Connection conn = null;
+        try {conn = DriverManager.getConnection("jdbc:postgresql://database:5432/dbproject", "postgres", "password");}
+        catch (Exception e) {System.out.print("No data imported yet\n\n"); return;}
 		PreparedStatement stmt = conn.prepareStatement("select count(child) from relations where parent = '" + node + "'");
         ResultSet rs = stmt.executeQuery(); rs.next(); System.out.print("Number of the children found: " + rs.getInt("count") + "\n");
     }
     private static void task3(String node) throws Exception
     {
-        System.out.print("Finding all grandchildren of a given node...\n\n");
-        Connection conn = DriverManager.getConnection("jdbc:postgresql://database:5432/dbproject", "postgres", "password");
+        System.out.print("Finding all grandchildren of a given node...\n\n"); Connection conn = null;
+        try {conn = DriverManager.getConnection("jdbc:postgresql://database:5432/dbproject", "postgres", "password");}
+        catch (Exception e) {System.out.print("No data imported yet\n\n"); return;}
 		PreparedStatement stmt = conn.prepareStatement("select child from relations where parent = '" + node + "'");
         ResultSet rs = stmt.executeQuery(); System.out.print("All grandchildren of a given node: \n\n"); ResultSet rs2;
         while (rs.next())
@@ -140,8 +143,9 @@ class App
             }
             node = temp;
         }
-        System.out.print("Finding all parents of a given node...\n\n");
-        Connection conn = DriverManager.getConnection("jdbc:postgresql://database:5432/dbproject", "postgres", "password");
+        System.out.print("Finding all parents of a given node...\n\n"); Connection conn = null;
+        try {conn = DriverManager.getConnection("jdbc:postgresql://database:5432/dbproject", "postgres", "password");}
+        catch (Exception e) {System.out.print("No data imported yet\n\n"); return;}
 		PreparedStatement stmt = conn.prepareStatement("select parent from relations where child = '" + node + "'");
         ResultSet rs = stmt.executeQuery(); System.out.print("All parents of a given node: \n\n");
         while (rs.next()) {System.out.print(rs.getString("parent") + "  ");} System.out.print("\n");
@@ -158,15 +162,17 @@ class App
             }
             node = temp;
         }
-        System.out.print("Finding the number of parents of a given node...\n\n");
-        Connection conn = DriverManager.getConnection("jdbc:postgresql://database:5432/dbproject", "postgres", "password");
+        System.out.print("Finding the number of parents of a given node...\n\n"); Connection conn = null;
+        try {conn = DriverManager.getConnection("jdbc:postgresql://database:5432/dbproject", "postgres", "password");}
+        catch (Exception e) {System.out.print("No data imported yet\n\n"); return;}
 		PreparedStatement stmt = conn.prepareStatement("select count(parent) from relations where child = '" + node + "'");
         ResultSet rs = stmt.executeQuery();  rs.next(); System.out.print("Number of the parents found: " + rs.getInt("count") + "\n");
     }
     private static void task6(String node) throws Exception
     {
-        System.out.print("Finding all grandparents of a given node...\n\n");
-        Connection conn = DriverManager.getConnection("jdbc:postgresql://database:5432/dbproject", "postgres", "password");
+        System.out.print("Finding all grandparents of a given node...\n\n"); Connection conn = null;
+        try {conn = DriverManager.getConnection("jdbc:postgresql://database:5432/dbproject", "postgres", "password");}
+        catch (Exception e) {System.out.print("No data imported yet\n\n"); return;}
 		PreparedStatement stmt = conn.prepareStatement("select parent from relations where child = '" + node + "'");
         ResultSet rs = stmt.executeQuery(); System.out.print("All grandparents of a given node: \n\n"); ResultSet rs2;
         while (rs.next())
@@ -189,24 +195,26 @@ class App
     }
     private static void task7() throws Exception
     {
-        System.out.print("Finding the number of all uniquely named nodes...\n\n");
-        Connection conn = DriverManager.getConnection("jdbc:postgresql://database:5432/dbproject", "postgres", "password");
+        System.out.print("Finding the number of all uniquely named nodes...\n\n"); Connection conn = null;
+        try {conn = DriverManager.getConnection("jdbc:postgresql://database:5432/dbproject", "postgres", "password");}
+        catch (Exception e) {System.out.print("No data imported yet\n\n"); return;}
         PreparedStatement stmt = conn.prepareStatement("select count(rows) from (select child from relations group by child union select parent from relations group by parent) as rows");
         ResultSet rs = stmt.executeQuery(); rs.next(); System.out.print("Number of the nodes found: " + rs.getInt("count") + "\n");
     }
-    // fix
     private static void task8() throws Exception
     {
-        System.out.print("Finding the root nodes...\n\n");
-        Connection conn = DriverManager.getConnection("jdbc:postgresql://database:5432/dbproject", "postgres", "password");
+        System.out.print("Finding the root nodes...\n\n"); Connection conn = null;
+        try {conn = DriverManager.getConnection("jdbc:postgresql://database:5432/dbproject", "postgres", "password");}
+        catch (Exception e) {System.out.print("No data imported yet\n\n"); return;}
         PreparedStatement stmt = conn.prepareStatement("select parent from relations group by parent except select child from relations group by child order by parent");
         ResultSet rs = stmt.executeQuery(); System.out.print("All root nodes found: \n\n");
         while (rs.next()) {System.out.print(rs.getString("parent") + "  ");} System.out.print("\n");
     }
     private static void task9() throws Exception
     {
-        System.out.print("Finding nodes with the most children...\n\n");
-        Connection conn = DriverManager.getConnection("jdbc:postgresql://database:5432/dbproject", "postgres", "password");
+        System.out.print("Finding nodes with the most children...\n\n"); Connection conn = null;
+        try {conn = DriverManager.getConnection("jdbc:postgresql://database:5432/dbproject", "postgres", "password");}
+        catch (Exception e) {System.out.print("No data imported yet\n\n"); return;}
         PreparedStatement stmt = conn.prepareStatement("select parent, count(child) from relations group by parent order by count desc");
         ResultSet rs = stmt.executeQuery(); boolean flag = false; int number = 0; System.out.print("Nodes with the most children: \n\n");
         while (rs.next())
@@ -218,8 +226,9 @@ class App
     }
     private static void task10() throws Exception
     {
-        System.out.println("Finding nodes with the least children...\n");
-        Connection conn = DriverManager.getConnection("jdbc:postgresql://database:5432/dbproject", "postgres", "password");
+        System.out.println("Finding nodes with the least children...\n\n"); Connection conn = null;
+        try {conn = DriverManager.getConnection("jdbc:postgresql://database:5432/dbproject", "postgres", "password");}
+        catch (Exception e) {System.out.print("No data imported yet\n\n"); return;}
         PreparedStatement stmt = conn.prepareStatement("select child from relations group by child except select parent from relations group by parent");
         ResultSet rs = stmt.executeQuery(); boolean flag = false; int number = 0; System.out.print("Nodes with the least children: \n\n");
         while (rs.next()) {if (flag == false) {flag = true;} System.out.print(rs.getString("child") + "  ");}
@@ -256,8 +265,9 @@ class App
             }
             new_node = temp;
         }
-        int counter = 0; System.out.println("Renaming given node...\n");
-        Connection conn = DriverManager.getConnection("jdbc:postgresql://database:5432/dbproject", "postgres", "password");
+        int counter = 0; System.out.println("Renaming given node...\n"); Connection conn = null;
+        try {conn = DriverManager.getConnection("jdbc:postgresql://database:5432/dbproject", "postgres", "password");}
+        catch (Exception e) {System.out.print("No data imported yet\n\n"); return;}
 		PreparedStatement stmt = conn.prepareStatement("update relations set parent = '" + new_node + "' where parent = '" + old_node + "'");
         counter += stmt.executeUpdate();
         stmt = conn.prepareStatement("update relations set child = '" + new_node + "' where child = '" + old_node + "'");
