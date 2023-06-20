@@ -267,12 +267,12 @@ class App
         }
         int counter = 0; System.out.println("Renaming given node...\n"); Connection conn = null;
         try {conn = DriverManager.getConnection("jdbc:postgresql://database:5432/dbproject", "postgres", "password");}
-        catch (Exception e) {System.out.print("No data imported yet\n\n"); return;}
+        catch (Exception e) {System.out.print("No data imported yet\n\n"); return;} conn.setAutoCommit(false);
 		PreparedStatement stmt = conn.prepareStatement("update relations set parent = '" + new_node + "' where parent = '" + old_node + "'");
         counter += stmt.executeUpdate();
         stmt = conn.prepareStatement("update relations set child = '" + new_node + "' where child = '" + old_node + "'");
         counter += stmt.executeUpdate();
-        System.out.println("Number of updated rows: " + counter); conn.close();
+        conn.commit(); System.out.println("Number of updated rows: " + counter); conn.close();
     }
     public static void main(String[] args) throws Exception
     {
