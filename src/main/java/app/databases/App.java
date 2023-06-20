@@ -67,7 +67,7 @@ class App
         System.out.print("\tDone!\nCreating the indexes\t");
         stmt = conn.prepareStatement("create index parent_idx on relations (parent)"); stmt.execute();
         stmt = conn.prepareStatement("create index child_idx on relations (child)"); stmt.execute();
-        System.out.print("\tDone!\n");
+        System.out.print("\tDone!\n"); conn.close();
     }
     private static void task1(String node) throws Exception
     {
@@ -86,7 +86,7 @@ class App
         catch (Exception e) {System.out.print("No data imported yet\n\n"); return;}
 		PreparedStatement stmt = conn.prepareStatement("select child from relations where parent = '" + node + "'");
         ResultSet rs = stmt.executeQuery(); System.out.print("All children of a given node: \n\n");
-        while (rs.next()) {System.out.print(rs.getString("child") + "  ");} System.out.print("\n");
+        while (rs.next()) {System.out.print(rs.getString("child") + "  ");} System.out.print("\n"); conn.close();
     }
     private static void task2(String node) throws Exception
     {
@@ -104,7 +104,7 @@ class App
         try {conn = DriverManager.getConnection("jdbc:postgresql://database:5432/dbproject", "postgres", "password");}
         catch (Exception e) {System.out.print("No data imported yet\n\n"); return;}
 		PreparedStatement stmt = conn.prepareStatement("select count(child) from relations where parent = '" + node + "'");
-        ResultSet rs = stmt.executeQuery(); rs.next(); System.out.print("Number of the children found: " + rs.getInt("count") + "\n");
+        ResultSet rs = stmt.executeQuery(); rs.next(); System.out.print("Number of the children found: " + rs.getInt("count") + "\n"); conn.close();
     }
     private static void task3(String node) throws Exception
     {
@@ -129,7 +129,7 @@ class App
             stmt = conn.prepareStatement("select child from relations where parent = '" + node + "'");
             rs2 = stmt.executeQuery(); while (rs2.next()) {System.out.print(rs2.getString("child") + "  ");}
         }
-        System.out.print("\n");
+        System.out.print("\n"); conn.close();
     }
     private static void task4(String node) throws Exception
     {
@@ -148,7 +148,7 @@ class App
         catch (Exception e) {System.out.print("No data imported yet\n\n"); return;}
 		PreparedStatement stmt = conn.prepareStatement("select parent from relations where child = '" + node + "'");
         ResultSet rs = stmt.executeQuery(); System.out.print("All parents of a given node: \n\n");
-        while (rs.next()) {System.out.print(rs.getString("parent") + "  ");} System.out.print("\n");
+        while (rs.next()) {System.out.print(rs.getString("parent") + "  ");} System.out.print("\n"); conn.close();
     }
     private static void task5(String node) throws Exception
     {
@@ -166,7 +166,7 @@ class App
         try {conn = DriverManager.getConnection("jdbc:postgresql://database:5432/dbproject", "postgres", "password");}
         catch (Exception e) {System.out.print("No data imported yet\n\n"); return;}
 		PreparedStatement stmt = conn.prepareStatement("select count(parent) from relations where child = '" + node + "'");
-        ResultSet rs = stmt.executeQuery();  rs.next(); System.out.print("Number of the parents found: " + rs.getInt("count") + "\n");
+        ResultSet rs = stmt.executeQuery();  rs.next(); System.out.print("Number of the parents found: " + rs.getInt("count") + "\n"); conn.close();
     }
     private static void task6(String node) throws Exception
     {
@@ -191,7 +191,7 @@ class App
             stmt = conn.prepareStatement("select parent from relations where child = '" + node + "'");
             rs2 = stmt.executeQuery(); while (rs2.next()) {System.out.print(rs2.getString("parent") + "  ");}
         }
-        System.out.print("\n");
+        System.out.print("\n"); conn.close();
     }
     private static void task7() throws Exception
     {
@@ -199,8 +199,8 @@ class App
         try {conn = DriverManager.getConnection("jdbc:postgresql://database:5432/dbproject", "postgres", "password");}
         catch (Exception e) {System.out.print("No data imported yet\n\n"); return;}
         PreparedStatement stmt = conn.prepareStatement("select count(rows) from (select child from relations group by child union select parent from relations group by parent) as rows");
-        ResultSet rs = stmt.executeQuery(); rs.next(); System.out.print("Number of the nodes found: " + rs.getInt("count") + "\n");
-    }
+        ResultSet rs = stmt.executeQuery(); rs.next(); System.out.print("Number of the nodes found: " + rs.getInt("count") + "\n"); conn.close();
+    } 
     private static void task8() throws Exception
     {
         System.out.print("Finding the root nodes...\n\n"); Connection conn = null;
@@ -208,7 +208,7 @@ class App
         catch (Exception e) {System.out.print("No data imported yet\n\n"); return;}
         PreparedStatement stmt = conn.prepareStatement("select parent from relations group by parent except select child from relations group by child order by parent");
         ResultSet rs = stmt.executeQuery(); System.out.print("All root nodes found: \n\n");
-        while (rs.next()) {System.out.print(rs.getString("parent") + "  ");} System.out.print("\n");
+        while (rs.next()) {System.out.print(rs.getString("parent") + "  ");} System.out.print("\n"); conn.close();
     }
     private static void task9() throws Exception
     {
@@ -222,7 +222,7 @@ class App
             if (flag == false) {System.out.print(rs.getString("parent") + "\t"); number = rs.getInt("count"); flag = true;}
             else {if (number == rs.getInt("count")) {System.out.print(rs.getString("parent") + "  ");}}
         }
-        System.out.print("\n");
+        System.out.print("\n"); conn.close();
     }
     private static void task10() throws Exception
     {
@@ -241,7 +241,7 @@ class App
                 else {if (number == rs.getInt("count")) {System.out.println(rs.getString("child") + "  ");}}
             }
         }
-        System.out.print("\n");
+        System.out.print("\n"); conn.close();
     }
     private static void task11(String old_node, String new_node) throws Exception
     {
@@ -272,7 +272,7 @@ class App
         counter += stmt.executeUpdate();
         stmt = conn.prepareStatement("update relations set child = '" + new_node + "' where child = '" + old_node + "'");
         counter += stmt.executeUpdate();
-        System.out.println("Number of updated rows: " + counter);
+        System.out.println("Number of updated rows: " + counter); conn.close();
     }
     public static void main(String[] args) throws Exception
     {
